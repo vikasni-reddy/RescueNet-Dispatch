@@ -1,0 +1,609 @@
+RescueNet AI – Complete Functional Requirements
+1. Landing Page
+
+The application should have a professional landing page introducing RescueNet AI as an AI-powered emergency response and disaster management platform.
+
+The landing page should include:
+
+Hero section
+Project overview
+Core capabilities
+AI features
+Call-to-action buttons
+Modern emergency response theme
+Responsive design
+2. Emergency Reporting System
+
+Users should be able to report emergencies through a simple form.
+
+The report form should support:
+
+Free-text emergency description
+Address/location input
+Latitude
+Longitude
+Optional contact details
+Optional image upload
+Submit emergency request
+
+The system should support reports in multiple languages.
+
+3. AI Incident Analysis
+
+Once an emergency is submitted, the AI should automatically analyze the report.
+
+The AI should extract:
+
+Incident Type
+Severity
+Number of People Affected
+Required Resources
+Incident Category
+Disaster Type
+Confidence Score
+Location Information
+Priority Score
+
+The AI should generate a structured JSON response internally.
+
+4. AI Generated Summary
+
+Generate a short operator-friendly summary.
+
+Example:
+
+"Elderly woman and four others trapped on rooftop due to flooding. Rising water levels. Immediate rescue required."
+
+This summary should appear on the dashboard.
+
+5. Multilingual Support
+
+Support:
+
+English
+Hindi
+Telugu
+Other regional languages
+
+Features:
+
+Automatic language detection
+Automatic translation to English
+Store original text
+Display both original and translated versions
+6. Hybrid Priority Scoring
+
+Automatically calculate incident priority using:
+
+AI Severity
+Number of people affected
+Elderly/Children detection
+Disaster type
+Time elapsed
+Medical urgency
+
+Display
+
+Priority Score (0–100)
+
+Priority Levels:
+
+Critical
+High
+Medium
+Low
+7. AI Explainability
+
+The application should explain WHY the AI assigned a priority.
+
+Example:
+
+Priority Score: 95
+
+Reason:
+
+✓ Severe Flood
+
+✓ Rising Water
+
+✓ Elderly Person
+
+✓ Two Children
+
+✓ Immediate Rescue Needed
+
+Display AI confidence percentage.
+
+8. Interactive Live Map
+
+Integrate Leaflet or Google Maps.
+
+Display:
+
+Incident markers
+Resource markers
+Priority color coding
+
+Critical
+
+Red
+
+High
+
+Orange
+
+Medium
+
+Yellow
+
+Low
+
+Green
+
+Clicking a marker should open incident details.
+
+9. Hotspot Detection
+
+Cluster nearby incidents.
+
+Display:
+
+Disaster hotspots
+Heatmap
+Cluster circles
+Number of incidents per region
+
+Show hotspot analytics.
+
+10. Resource Management
+
+Maintain emergency resources including:
+
+Ambulances
+
+Fire Trucks
+
+Police Units
+
+Medical Teams
+
+Rescue Boats
+
+Food Supply Vehicles
+
+Relief Teams
+
+Each resource should contain:
+
+Name
+Type
+Current Status
+Capacity
+Latitude
+Longitude
+Availability
+Assigned Incident
+11. Intelligent Resource Matching
+
+Automatically recommend the best resources.
+
+Matching should consider:
+
+Distance
+Resource Type
+Capacity
+Availability
+Current Workload
+
+Display:
+
+Top 5 Recommended Resources
+
+Each recommendation should include:
+
+Distance
+
+Reason
+
+Estimated Arrival Time
+
+Assign Button
+
+12. Route Visualization
+
+After assigning a resource:
+
+Show
+
+Resource
+
+↓
+
+Route
+
+↓
+
+Incident
+
+using a polyline on the map.
+
+13. One Click Dispatch
+
+Operators should be able to dispatch resources with one click.
+
+Dispatch should:
+
+Assign resource
+
+Update status
+
+Notify operator
+
+Create dispatch log
+
+14. Incident Lifecycle
+
+Every incident should move through:
+
+Pending
+
+↓
+
+AI Processing
+
+↓
+
+Assigned
+
+↓
+
+Dispatched
+
+↓
+
+En Route
+
+↓
+
+In Progress
+
+↓
+
+Resolved
+
+↓
+
+Closed
+
+Display a visual progress tracker.
+
+15. Dispatch Timeline
+
+Every action should be recorded.
+
+Example
+
+09:15 Incident Reported
+
+09:16 AI Analysis Complete
+
+09:17 Priority Assigned
+
+09:18 Ambulance Assigned
+
+09:20 Team En Route
+
+09:35 Victim Rescued
+
+09:45 Incident Closed
+
+16. Dashboard
+
+Dashboard should display
+
+Total Incidents
+
+Critical Incidents
+
+Pending Incidents
+
+Resolved Incidents
+
+Available Resources
+
+Resources in Use
+
+Average Response Time
+
+Average Resolution Time
+
+Resource Utilization
+
+Live Notifications
+
+17. Analytics Dashboard
+
+Professional charts showing:
+
+Incident Trends
+
+Severity Distribution
+
+Incident Type Distribution
+
+Average Response Time
+
+Resolution Rate
+
+Resource Utilization
+
+Daily Reports
+
+Weekly Reports
+
+Monthly Reports
+
+18. Incident Queue
+
+Display all incidents in priority order.
+
+Each card should contain:
+
+Priority Badge
+
+Status
+
+Summary
+
+Location
+
+Time
+
+People Affected
+
+Assigned Resource
+
+Dispatch Status
+
+19. Advanced Search & Filters
+
+Allow filtering by:
+
+Severity
+
+Status
+
+Incident Type
+
+Date
+
+Location
+
+Assigned Resource
+
+Language
+
+Priority
+
+Sort by:
+
+Priority
+
+Newest
+
+Oldest
+
+Distance
+
+Status
+
+20. Resource Registry Page
+
+Dedicated page showing all resources.
+
+Include:
+
+Availability
+
+Assignments
+
+Current Location
+
+Capacity
+
+Resource Type
+
+Search
+
+Filtering
+
+Status updates
+
+21. Notifications
+
+Real-time notifications for:
+
+New Critical Incident
+
+New Emergency
+
+Resource Assigned
+
+Dispatch Complete
+
+Incident Resolved
+
+Resource Available
+
+Support:
+
+Toast Notifications
+
+Browser Notifications (optional)
+
+22. AI Recommendation Panel
+
+Show:
+
+Recommended Resource
+
+Reason
+
+Distance
+
+Estimated Arrival
+
+Confidence Score
+
+Example:
+
+Recommended Resource
+
+🚑 Ambulance Alpha
+
+Reason
+
+Closest Available Ambulance
+
+ETA
+
+4 Minutes
+
+Confidence
+
+97%
+
+23. Activity Feed
+
+Recent activity section.
+
+Example:
+
+Fire Team Assigned
+
+Ambulance Dispatched
+
+Flood Alert Created
+
+Critical Incident Reported
+
+Medical Team Available
+
+Updates should appear live.
+
+24. Sample Demo Data
+
+Seed the application with:
+
+40–60 Incidents
+
+20+ Emergency Resources
+
+Multiple Locations
+
+Different Disaster Types
+
+Different Severity Levels
+
+Different Statuses
+
+This makes the dashboard look realistic during demonstrations.
+
+25. Admin Panel
+
+Admin should be able to:
+
+Manage Resources
+
+View Analytics
+
+Manage Incidents
+
+Monitor Live Operations
+
+Update Resource Status
+
+View Dispatch Logs
+
+Manage Operators
+
+26. Error Handling
+
+Display proper messages for:
+
+AI Failure
+
+Map Failure
+
+API Failure
+
+Database Failure
+
+Network Failure
+
+Invalid Inputs
+
+27. Responsive Design
+
+Support:
+
+Desktop
+
+Tablet
+
+Large Screens
+
+Professional emergency operations center layout.
+
+28. UI Enhancements
+
+Smooth animations
+
+Loading skeletons
+
+Hover effects
+
+Modern cards
+
+Status badges
+
+Progress bars
+
+Icons
+
+Professional typography
+
+Dark theme
+
+Consistent spacing
+
+29. Deployment Ready
+
+Production deployment
+
+Environment variables
+
+Secure API keys
+
+Optimized build
+
+Comprehensive README
+
+Demo data
+
+30. End-to-End Workflow
+
+The complete application workflow should be:
+
+User submits an emergency report.
+AI detects the language and translates it if necessary.
+AI extracts structured incident information.
+AI generates a concise incident summary.
+AI calculates the priority score and confidence level.
+The incident is displayed on the live map with a color-coded priority marker.
+The system identifies and recommends the nearest suitable emergency resources.
+The operator reviews the AI recommendations and dispatches a resource with one click.
+The assigned resource and its route to the incident are displayed on the map.
+The incident progresses through its lifecycle (Pending → Assigned → Dispatched → En Route → In Progress → Resolved → Closed).
+Every action is recorded in the dispatch timeline and activity log.
+The dashboard updates in real time with analytics, notifications, resource utilization, and incident status

@@ -1,0 +1,27 @@
+kind = "web"
+previewPath = "/"
+title = "RescueNet AI"
+version = "1.0.0"
+id = "artifacts/rescue-net"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 22266
+
+[services.development]
+run = "pnpm --filter @workspace/rescue-net run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/rescue-net", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/rescue-net/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22266"
+BASE_PATH = "/"

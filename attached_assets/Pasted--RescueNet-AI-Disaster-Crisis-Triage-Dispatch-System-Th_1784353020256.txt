@@ -1,0 +1,220 @@
+# RescueNet AI — Disaster Crisis Triage & Dispatch System
+**Theme 3: Crisis Management, HealthTech & Emergency Response**
+
+---
+
+## 1. Why This Problem
+
+During floods, cyclones, or building collapses (extremely common across India), affected people send help requests through many uncoordinated channels — calls, WhatsApp, SMS, walk-ins to relief camps. Responders (NGOs, disaster management cells, volunteers) get hundreds of messy, unstructured messages in the first "golden hours" and have to manually figure out: *what does this person need, how urgent is it, and who's closest to help?* That manual triage is slow, and delays cost lives.
+
+This maps directly to the theme's "AI that works when people need it most," and it beats a generic chatbot idea because it combines **NLP extraction + urgency scoring + spatial matching** — three visibly different AI/logic layers a judge can actually see working, not just one wrapped LLM call.
+
+**Why it scores well against the rubric:**
+- **Problem & Impact** — narrow, concrete: "triage and dispatch during the first hours of a disaster," not "AI for disaster management."
+- **AI Implementation** — the LLM does real structured extraction + reasoning, not decoration. Judges can open your code and see the prompt, the JSON schema, and the scoring logic.
+- **Deployed Demo** — a live map + dashboard is inherently demo-friendly and visually convincing in a 2–3 min video.
+- **Innovation** — most people will build "chatbot for X." A dispatch/matching engine is a level up.
+
+---
+
+## 2. The Problem Statement (use this in your Submission Form, Section 01)
+
+> **Problem:** During disasters, incoming help requests arrive as unstructured free text from multiple channels, in mixed languages, with no consistent severity signal. Responders manually read and triage each one, which is slow and inconsistent, and resource allocation (which volunteer/ambulance goes where) is done ad hoc with no visibility into who's nearest or best suited.
+>
+> **Who it affects:** Disaster response NGOs, local disaster management authorities, and ultimately the affected population who wait longer for help because triage is manual.
+>
+> **Why existing solutions fail:** Most relief coordination still happens over spreadsheets, phone calls, and WhatsApp groups. There's no automatic urgency classification and no systematic nearest-resource matching — it depends entirely on whoever is reading messages at that moment.
+>
+> **Our approach:** RescueNet AI ingests free-text help requests (any language, any format), uses an LLM to extract structured fields (need type, urgency, people affected, key details), computes a priority score, plots every request on a live map, and recommends the best-matched available resource (volunteer team, ambulance, relief truck) by type-fit and distance — so a small response team can act on the most critical cases first instead of reading every message linearly.
+
+---
+
+## 3. Core Features
+
+### MVP (build this first — non-negotiable for submission)
+1. **Intake form** — free text box + optional location (map pin or address) + submit. This simulates the "SMS/WhatsApp/call center" input channel.
+2. **AI extraction** — on submit, call an LLM to return structured JSON: `need_type`, `urgency`, `people_affected`, `summary`, `language_detected`.
+3. **Priority scoring** — combine LLM urgency + keyword signals (e.g. "trapped," "unconscious," "children," "no food/water") + time-since-reported into a single priority score (0–100).
+4. **Live dashboard**
+   - Map (color-coded pins: red = critical, orange = high, yellow = medium, green = low)
+   - Sorted priority queue/list view
+   - Click a request → see extracted details + suggested nearest resource
+5. **Resource pool** — a seeded list of volunteer teams/ambulances/relief trucks, each with a type (medical/rescue/food/shelter), capacity, and location.
+6. **Matching logic** — for a selected request, rank available resources by (a) type match, (b) distance (haversine formula), (c) availability. One-click "Assign."
+7. **Status pipeline** — Reported → Assigned → En Route → Resolved.
+
+### Stretch (only if MVP is done and stable with time to spare)
+- Real-time updates via Supabase Realtime instead of manual refresh.
+- A small analytics panel: counts by type/urgency, average response time.
+- Multilingual input demoed live (type in Hindi/Telugu, show it gets normalized).
+- "AI reasoning" shown transparently in the UI (e.g., a one-line explanation of why a resource was recommended) — this is a great judge-facing touch and costs almost nothing to add.
+
+**Do not build:** user auth/login, admin roles, payment, native mobile app. None of that helps you score higher and all of it burns time you don't have.
+
+---
+
+## 4. Tech Stack (100% free tier)
+
+| Layer | Choice | Why |
+|---|---|---|
+| Frontend | React + Vite + TailwindCSS | Fast to scaffold, deploys instantly to Vercel |
+| Map | Leaflet.js + OpenStreetMap tiles | No API key needed, fully free |
+| Backend | FastAPI (Python) | Simple, async, easy to deploy free |
+| Hosting (frontend) | Vercel free tier | One command deploy, generous free limits |
+| Hosting (backend) | Render free tier (or Railway free tier) | Free web service hosting |
+| Database | Supabase free tier (Postgres) | Free Postgres + instant REST API + optional realtime, saves you writing your own DB layer |
+| AI / LLM | **Groq API** (free, very fast Llama 3.1/3.3 models) or **Google AI Studio (Gemini 2.0/2.5 Flash free tier)** | Both have genuinely free API keys with generous limits — no credit card needed |
+| Distance calc | Haversine formula (plain Python, no library needed) | Zero dependency, deterministic |
+
+> Get a free Groq key at console.groq.com, or a free Gemini key at aistudio.google.com. Either works — Groq is slightly faster for a live demo, Gemini has a more forgiving JSON-mode.
+
+---
+
+## 5. Where AI Actually Does the Work (be explicit about this in your Solution Description)
+
+**Step 1 — Structured extraction (LLM call #1).** On every new request, send the raw text to the LLM with a system prompt like:
+
+```
+You are a disaster-response triage assistant. Given a free-text help
+request (which may be in any language), extract and return ONLY valid
+JSON with this schema:
+{
+  "need_type": "medical | rescue | food | water | shelter | other",
+  "urgency": "critical | high | medium | low",
+  "people_affected": <integer or null>,
+  "summary": "<one sentence, in English>",
+  "language_detected": "<language name>"
+}
+No prose, no markdown, only the JSON object.
+```
+
+**Step 2 — Priority scoring (your own logic, not the LLM).** Combine:
+- urgency mapped to a base score (critical=90, high=70, medium=45, low=20)
+- + keyword boosts (e.g. +10 for "trapped"/"unconscious"/"child"/"elderly")
+- + a small time-decay boost so older unresolved requests rise over time
+
+This hybrid (LLM judgment + deterministic rules) is a nice thing to point out to judges — it shows you understand LLM outputs shouldn't be blindly trusted for a life-safety ranking.
+
+**Step 3 — Resource matching (LLM call #2, optional but impressive).** Once you've shortlisted the top 3 resources by type + distance, you can optionally ask the LLM to pick the best one and produce a one-line justification ("Assigning Medical Team 2 — closest team with medical capability, 1.8 km away, currently free"). This is what gives your demo an "it's actually reasoning" moment.
+
+---
+
+## 6. Build Plan — Hour by Hour (compressed for your deadline)
+
+You have roughly a day. Work in this order and **do not polish early** — get the whole pipeline working end-to-end ugly first, then make it pretty only if time remains.
+
+**Hours 0–1: Setup**
+- Create GitHub repo (public).
+- `npm create vite@latest` for frontend (React + Tailwind).
+- FastAPI backend scaffold (`main.py`, one `/analyze` endpoint, one `/requests` endpoint).
+- Get your Groq or Gemini free API key.
+- Create free Supabase project, make two tables: `requests` and `resources`.
+
+**Hours 1–4: Core AI pipeline**
+- Build `/analyze` endpoint: takes raw text → calls LLM → returns structured JSON.
+- Test with 5–6 sample messages (write these yourself in different tones/languages to prove multilingual handling).
+- Build the priority scoring function.
+
+**Hours 4–8: Intake + storage**
+- Build the intake form UI (text box + map-pin picker using Leaflet's click-to-place).
+- On submit: call `/analyze`, then save request + score to Supabase.
+- Seed `resources` table with ~8–10 fake resources (medical teams, ambulances, food trucks) around a real city (e.g. Hyderabad) so distances look realistic.
+
+**Hours 8–14: Dashboard + matching**
+- Live map showing all requests as color-coded pins.
+- Sorted list/queue view.
+- Click request → detail panel → nearest-3-resources ranked → Assign button.
+- Status field updates (Reported → Assigned → En Route → Resolved).
+
+**Hours 14–18: Deploy + fix**
+- Deploy backend to Render, frontend to Vercel.
+- Test the deployed link from your phone (a different device), not just localhost.
+- Fix whatever breaks in production (usually CORS + env vars).
+
+**Hours 18–21: Polish (only if ahead of schedule)**
+- Add the "AI reasoning" one-liner for assignments.
+- Add the analytics panel.
+- Clean up UI spacing/colors.
+
+**Hours 21–24: README, video, submission**
+- Write README (see template below).
+- Record demo video (script below).
+- Fill submission form once it opens 16 July 6 PM — wait, in your case the form is already open; submit as soon as everything is ready, don't wait until the last hour.
+
+---
+
+## 7. Using AI Tools to Build Faster (meta layer — how you code this quickly)
+
+- **Claude (this chat) or Claude Code** — paste your FastAPI/React files in and ask for specific functions (e.g. "write the haversine distance + resource ranking function in Python") rather than asking for the whole app at once. Small, specific asks give you code you can verify and debug fast.
+- **v0.dev or bolt.new** (free tiers) — good for quickly scaffolding the dashboard UI layout (map + list + detail panel) that you then wire up to your real API.
+- **GitHub Copilot free tier** (free for students, or via GitHub Education pack) — useful for autocompleting boilerplate FastAPI/Pydantic models.
+- Keep the **actual product's AI calls** (Groq/Gemini) completely separate from **the AI tools you use to write code** — judges only evaluate the former as "AI at the core," so make sure your README is clear about which LLM API your deployed app calls at runtime.
+
+---
+
+## 8. Demo Video Script (2–3 minutes — follow this almost verbatim)
+
+1. **(15s) The problem:** "During disasters, help requests come in as messy text from many channels, and responders have to manually figure out who's most critical and who's closest to help them."
+2. **(20s) Show the intake:** Type a realistic message ("Elderly woman trapped on rooftop, water rising, no food since morning") and submit.
+3. **(30s) Show the AI extraction:** Show the structured JSON result (need_type: rescue, urgency: critical, etc.) — say out loud "this is the LLM extracting structured urgency from free text."
+4. **(30s) Show the dashboard:** Pan across the live map, point out color-coded pins, click the new critical request.
+5. **(30s) Show the matching:** Show the ranked resource list, the AI's one-line justification, click Assign, show status change to "En Route."
+6. **(15s) Close:** "RescueNet AI turns unstructured, multilingual crisis reports into a ranked, geographically-aware dispatch queue in seconds — built solo in [X hours] using Groq/Gemini, FastAPI, React, and Supabase, all on free tiers."
+
+---
+
+## 9. README Template (put this in your GitHub repo)
+
+```markdown
+# RescueNet AI
+
+AI-powered disaster crisis triage and resource dispatch system.
+
+## Problem
+[2-3 sentences from Section 2 above]
+
+## Solution
+[2-3 sentences describing the pipeline: intake -> LLM extraction -> 
+priority scoring -> map dashboard -> resource matching]
+
+## Tech Stack
+- Frontend: React, Vite, Tailwind, Leaflet
+- Backend: FastAPI
+- Database: Supabase (Postgres)
+- AI: Groq (Llama 3.1) / Google Gemini 2.0 Flash
+
+## AI Usage
+- LLM call 1: Structured extraction from free text (need_type, urgency, 
+  people_affected, summary)
+- Custom scoring: hybrid LLM + rule-based priority score
+- LLM call 2 (optional): resource-assignment justification
+
+## Setup
+1. Clone repo
+2. `cd backend && pip install -r requirements.txt`
+3. Add `.env` with `GROQ_API_KEY` / `GEMINI_API_KEY` and `SUPABASE_URL`, `SUPABASE_KEY`
+4. `uvicorn main:app --reload`
+5. `cd frontend && npm install && npm run dev`
+
+## Live Demo
+[deployed link]
+
+## Demo Video
+[youtube/drive link]
+```
+
+---
+
+## 10. Submission Checklist
+
+- [ ] Problem & Problem Statement written (Section 2 above, adapted)
+- [ ] Solution Description written (Section 5 above, adapted)
+- [ ] GitHub repo public, README complete
+- [ ] Deployed link tested from a different device, no login required
+- [ ] Demo video 2–3 min, uploaded unlisted to YouTube or shared via Drive
+- [ ] All links pasted into the Submission Form
+- [ ] Submitted well before 19 July 11:59 PM — don't submit in the last 10 minutes
+
+---
+
+**One honest note on scope:** if at hour 18 the resource-matching piece isn't working, cut it and keep intake + AI extraction + priority-scored map as your MVP. A smaller thing that works flawlessly and demos cleanly will beat a bigger thing that's flaky on stage, every time — this is literally what the evaluation notes say.
