@@ -10,6 +10,9 @@ import IncidentDetailPage from '@/pages/incident-detail';
 import MapPage from '@/pages/map';
 import ResourcesPage from '@/pages/resources';
 import AnalyticsPage from '@/pages/analytics';
+import ReportPage from '@/pages/report';
+import ReportConfirmationPage from '@/pages/report-confirmation';
+import OperatorGatePage from '@/pages/operator-gate';
 import { Route, Switch, Router as WouterRouter } from 'wouter';
 
 const queryClient = new QueryClient({
@@ -25,6 +28,12 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={LandingPage} />
+      {/* Public citizen routes — no operator sidebar */}
+      <Route path="/report" component={ReportPage} />
+      <Route path="/report/confirmation/:id" component={ReportConfirmationPage} />
+      {/* Operator gate — separates public from command center */}
+      <Route path="/operator" component={OperatorGatePage} />
+      {/* Operator / command center routes */}
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/incidents" component={IncidentsPage} />
       <Route path="/incidents/new" component={NewIncidentPage} />

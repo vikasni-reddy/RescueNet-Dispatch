@@ -34,14 +34,17 @@ export default function LandingPage() {
           <nav className="hidden md:flex items-center gap-6">
             <a href="#features" onClick={e => { e.preventDefault(); document.getElementById("features")?.scrollIntoView({ behavior: "smooth" }) }} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer">Features</a>
             <a href="#how-it-works" onClick={handleHowItWorksClick} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer">How it works</a>
-            <Link href="/dashboard" className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+            <Link href="/operator" className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
               Launch Command Center
             </Link>
           </nav>
           {/* Mobile nav */}
           <div className="md:hidden flex items-center gap-2">
-            <Link href="/dashboard">
-              <Button size="sm">Enter</Button>
+            <Link href="/report">
+              <Button size="sm" variant="outline">Report</Button>
+            </Link>
+            <Link href="/operator">
+              <Button size="sm">Operator</Button>
             </Link>
           </div>
         </div>
@@ -71,12 +74,12 @@ export default function LandingPage() {
             </p>
             
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link href="/dashboard" className="inline-flex h-12 items-center justify-center rounded-md bg-primary px-8 text-base font-medium text-primary-foreground shadow transition-all hover:bg-primary/90 hover:scale-105 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring gap-2 w-full sm:w-auto">
+              <Link href="/report" className="inline-flex h-12 items-center justify-center rounded-md bg-destructive px-8 text-base font-medium text-white shadow transition-all hover:bg-destructive/90 hover:scale-105 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring gap-2 w-full sm:w-auto">
                 <Activity className="w-5 h-5" />
-                Enter Command Center
-              </Link>
-              <Link href="/incidents/new" className="inline-flex h-12 items-center justify-center rounded-md border border-input bg-background px-8 text-base font-medium shadow-sm transition-all hover:bg-accent hover:text-accent-foreground hover:scale-105 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring w-full sm:w-auto">
                 Report Emergency
+              </Link>
+              <Link href="/operator" className="inline-flex h-12 items-center justify-center rounded-md border border-input bg-background px-8 text-base font-medium shadow-sm transition-all hover:bg-accent hover:text-accent-foreground hover:scale-105 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring w-full sm:w-auto">
+                Launch Command Center
               </Link>
             </div>
 

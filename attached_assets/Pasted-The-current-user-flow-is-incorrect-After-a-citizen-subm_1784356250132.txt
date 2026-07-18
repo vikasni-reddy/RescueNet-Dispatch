@@ -1,0 +1,100 @@
+The current user flow is incorrect. After a citizen submits an emergency report, they are redirected to the internal Command Center, which should only be accessible by emergency operators.
+
+Please redesign the application with two separate user roles and user journeys.
+
+User Type 1: Citizen (Public User)
+
+The citizen interface should be simple and limited to reporting emergencies.
+
+The citizen should be able to:
+
+View the landing page.
+Submit an emergency report.
+Enter location and contact details.
+Upload optional supporting information (if enabled).
+Receive a confirmation that the emergency has been successfully submitted.
+Receive a unique Incident ID (e.g., INC-0052).
+View a simple confirmation page showing:
+Incident ID
+Submission Time
+Current Status (Pending / Under Review / Dispatched)
+Message such as:
+"Your emergency has been received. Our response team has been notified."
+
+The citizen must NOT have access to:
+
+Command Center
+Dashboard
+Live Map
+Incident Queue
+Resource Registry
+Analytics
+Dispatch Controls
+Internal Incident Details
+
+After submitting a report, the citizen should remain within the public interface and should never be redirected into the operator dashboard.
+
+User Type 2: Emergency Operator (Command Center)
+
+The Command Center is an internal application for authorized emergency personnel only.
+
+Only operators should have access to:
+
+Dashboard
+Live Map
+Incident Queue
+Resource Registry
+Analytics
+AI Triage Analysis
+Dispatch Recommendations
+Resource Assignment
+Incident Lifecycle Management
+Dispatch History
+Real-Time Notifications
+
+Operators should be able to:
+
+View newly reported emergencies.
+Review AI-generated analysis.
+View AI priority scores.
+See recommended resources.
+Dispatch emergency units.
+Update incident status.
+Monitor incidents until they are resolved.
+Navigation Changes
+
+Update the navigation flow as follows:
+
+Landing Page
+
+Report Emergency → Public Emergency Report Form
+Launch Command Center → Operator Dashboard
+
+After clicking Report Emergency, users should never enter the Command Center.
+
+After clicking Launch Command Center, only operators should enter the internal dashboard.
+
+Confirmation Page
+
+After a citizen submits a report, redirect them to a dedicated confirmation page instead of the dashboard.
+
+Example:
+
+Emergency Report Submitted Successfully
+
+Incident ID: INC-0052
+
+Status: Pending Review
+
+Submission Time: July 18, 2026 – 11:57 AM
+
+Message:
+
+"Our AI has analyzed your request and notified the emergency response team. Please keep your phone available. If the situation changes, contact emergency services immediately."
+
+Provide two buttons:
+
+Return to Home
+Report Another Emergency
+
+Do not expose any internal command center information to public users.
