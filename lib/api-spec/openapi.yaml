@@ -3,13 +3,21 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: RescueNet AI - Disaster Crisis Triage & Dispatch System API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: incidents
+    description: Emergency incident management
+  - name: resources
+    description: Emergency resource management
+  - name: dashboard
+    description: Dashboard statistics and analytics
+  - name: activity
+    description: Activity feed
 paths:
   /healthz:
     get:
@@ -24,6 +32,326 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /incidents:
+    get:
+      operationId: listIncidents
+      tags: [incidents]
+      summary: List all incidents
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: urgency
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: needType
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: sortBy
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: limit
+          in: query
+          schema:
+            type: ["integer", "null"]
+      responses:
+        "200":
+          description: List of incidents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Incident"
+    post:
+      operationId: createIncident
+      tags: [incidents]
+      summary: Submit a new emergency incident (triggers AI analysis)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IncidentInput"
+      responses:
+        "201":
+          description: Incident created and analyzed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Incident"
+
+  /incidents/{id}:
+    get:
+      operationId: getIncident
+      tags: [incidents]
+      summary: Get incident by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Incident detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Incident"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateIncident
+      tags: [incidents]
+      summary: Update incident status or details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IncidentPatch"
+      responses:
+        "200":
+          description: Updated incident
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Incident"
+    delete:
+      operationId: deleteIncident
+      tags: [incidents]
+      summary: Delete an incident
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /incidents/{id}/assign:
+    post:
+      operationId: assignResource
+      tags: [incidents]
+      summary: Assign a resource to an incident (one-click dispatch)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssignmentInput"
+      responses:
+        "200":
+          description: Assignment result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Incident"
+
+  /incidents/{id}/recommendations:
+    get:
+      operationId: getResourceRecommendations
+      tags: [incidents]
+      summary: Get AI-ranked resource recommendations for an incident
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Ranked resource recommendations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ResourceRecommendation"
+
+  /incidents/{id}/timeline:
+    get:
+      operationId: getIncidentTimeline
+      tags: [incidents]
+      summary: Get the full dispatch/status timeline for an incident
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Timeline entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TimelineEntry"
+
+  /resources:
+    get:
+      operationId: listResources
+      tags: [resources]
+      summary: List all emergency resources
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: isAvailable
+          in: query
+          schema:
+            type: ["boolean", "null"]
+      responses:
+        "200":
+          description: List of resources
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Resource"
+    post:
+      operationId: createResource
+      tags: [resources]
+      summary: Add a new emergency resource
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResourceInput"
+      responses:
+        "201":
+          description: Created resource
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Resource"
+
+  /resources/{id}:
+    get:
+      operationId: getResource
+      tags: [resources]
+      summary: Get a resource by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Resource detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Resource"
+    patch:
+      operationId: updateResource
+      tags: [resources]
+      summary: Update a resource (status, availability, location)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResourcePatch"
+      responses:
+        "200":
+          description: Updated resource
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Resource"
+    delete:
+      operationId: deleteResource
+      tags: [resources]
+      summary: Delete a resource
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /dashboard/stats:
+    get:
+      operationId: getDashboardStats
+      tags: [dashboard]
+      summary: Get live dashboard statistics
+      responses:
+        "200":
+          description: Dashboard statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  /dashboard/analytics:
+    get:
+      operationId: getDashboardAnalytics
+      tags: [dashboard]
+      summary: Get analytics data (charts - urgency distribution, types, trends)
+      responses:
+        "200":
+          description: Analytics data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalyticsData"
+
+  /activity:
+    get:
+      operationId: listActivity
+      tags: [activity]
+      summary: Get recent activity feed
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: ["integer", "null"]
+      responses:
+        "200":
+          description: Activity items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityItem"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +362,337 @@ components:
       required:
         - status
 
+    Incident:
+      type: object
+      required:
+        - id
+        - rawText
+        - status
+        - priorityScore
+        - urgency
+        - needType
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: integer
+        rawText:
+          type: string
+        originalLanguage:
+          type: ["string", "null"]
+        translatedText:
+          type: ["string", "null"]
+        needType:
+          type: string
+          description: "medical | rescue | food | water | shelter | other"
+        urgency:
+          type: string
+          description: "critical | high | medium | low"
+        peopleAffected:
+          type: ["integer", "null"]
+        summary:
+          type: ["string", "null"]
+        priorityScore:
+          type: integer
+          description: "0-100 priority score"
+        aiConfidence:
+          type: ["number", "null"]
+          description: "AI confidence percentage 0-100"
+        aiExplanation:
+          type: ["string", "null"]
+        aiReasoningFactors:
+          type: ["string", "null"]
+          description: "JSON array of reasons as string"
+        status:
+          type: string
+          description: "pending | ai_processing | assigned | dispatched | en_route | in_progress | resolved | closed"
+        lat:
+          type: ["number", "null"]
+        lng:
+          type: ["number", "null"]
+        address:
+          type: ["string", "null"]
+        contactInfo:
+          type: ["string", "null"]
+        imageUrl:
+          type: ["string", "null"]
+        assignedResourceId:
+          type: ["integer", "null"]
+        assignedResourceName:
+          type: ["string", "null"]
+        dispatchJustification:
+          type: ["string", "null"]
+        disasterType:
+          type: ["string", "null"]
+        incidentCategory:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    IncidentInput:
+      type: object
+      required:
+        - rawText
+      properties:
+        rawText:
+          type: string
+          minLength: 1
+        address:
+          type: ["string", "null"]
+        lat:
+          type: ["number", "null"]
+        lng:
+          type: ["number", "null"]
+        contactInfo:
+          type: ["string", "null"]
+        imageUrl:
+          type: ["string", "null"]
+
+    IncidentPatch:
+      type: object
+      properties:
+        status:
+          type: ["string", "null"]
+        assignedResourceId:
+          type: ["integer", "null"]
+        lat:
+          type: ["number", "null"]
+        lng:
+          type: ["number", "null"]
+        address:
+          type: ["string", "null"]
+
+    AssignmentInput:
+      type: object
+      required:
+        - resourceId
+      properties:
+        resourceId:
+          type: integer
+        justification:
+          type: ["string", "null"]
+
+    Resource:
+      type: object
+      required:
+        - id
+        - name
+        - type
+        - status
+        - isAvailable
+        - lat
+        - lng
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        type:
+          type: string
+          description: "medical | rescue | food | shelter | fire | police | boat"
+        status:
+          type: string
+          description: "available | busy | en_route | offline"
+        capacity:
+          type: ["integer", "null"]
+        lat:
+          type: number
+        lng:
+          type: number
+        isAvailable:
+          type: boolean
+        assignedIncidentId:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ResourceInput:
+      type: object
+      required:
+        - name
+        - type
+        - lat
+        - lng
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+        capacity:
+          type: ["integer", "null"]
+        lat:
+          type: number
+        lng:
+          type: number
+
+    ResourcePatch:
+      type: object
+      properties:
+        status:
+          type: ["string", "null"]
+        isAvailable:
+          type: ["boolean", "null"]
+        lat:
+          type: ["number", "null"]
+        lng:
+          type: ["number", "null"]
+        assignedIncidentId:
+          type: ["integer", "null"]
+
+    ResourceRecommendation:
+      type: object
+      required:
+        - resource
+        - distance
+        - reason
+        - eta
+        - confidence
+      properties:
+        resource:
+          $ref: "#/components/schemas/Resource"
+        distance:
+          type: number
+          description: "Distance in km"
+        reason:
+          type: string
+        eta:
+          type: string
+          description: "e.g. '4 minutes'"
+        confidence:
+          type: number
+          description: "0-100"
+
+    TimelineEntry:
+      type: object
+      required:
+        - id
+        - incidentId
+        - action
+        - timestamp
+      properties:
+        id:
+          type: integer
+        incidentId:
+          type: integer
+        action:
+          type: string
+        details:
+          type: ["string", "null"]
+        timestamp:
+          type: string
+          format: date-time
+
+    DashboardStats:
+      type: object
+      required:
+        - totalIncidents
+        - criticalIncidents
+        - pendingIncidents
+        - resolvedIncidents
+        - availableResources
+        - resourcesInUse
+        - avgResponseTimeMinutes
+        - avgResolutionTimeMinutes
+        - resourceUtilizationPercent
+      properties:
+        totalIncidents:
+          type: integer
+        criticalIncidents:
+          type: integer
+        pendingIncidents:
+          type: integer
+        resolvedIncidents:
+          type: integer
+        availableResources:
+          type: integer
+        resourcesInUse:
+          type: integer
+        avgResponseTimeMinutes:
+          type: number
+        avgResolutionTimeMinutes:
+          type: number
+        resourceUtilizationPercent:
+          type: number
+
+    AnalyticsData:
+      type: object
+      required:
+        - urgencyDistribution
+        - typeDistribution
+        - statusDistribution
+        - dailyTrend
+        - resolutionRate
+      properties:
+        urgencyDistribution:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChartDataPoint"
+        typeDistribution:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChartDataPoint"
+        statusDistribution:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChartDataPoint"
+        dailyTrend:
+          type: array
+          items:
+            $ref: "#/components/schemas/TrendDataPoint"
+        resolutionRate:
+          type: number
+
+    ChartDataPoint:
+      type: object
+      required:
+        - name
+        - value
+      properties:
+        name:
+          type: string
+        value:
+          type: integer
+
+    TrendDataPoint:
+      type: object
+      required:
+        - date
+        - count
+      properties:
+        date:
+          type: string
+        count:
+          type: integer
+
+    ActivityItem:
+      type: object
+      required:
+        - id
+        - action
+        - timestamp
+      properties:
+        id:
+          type: integer
+        action:
+          type: string
+        resourceName:
+          type: ["string", "null"]
+        incidentId:
+          type: ["integer", "null"]
+        incidentSummary:
+          type: ["string", "null"]
+        urgency:
+          type: ["string", "null"]
+        timestamp:
+          type: string
+          format: date-time
