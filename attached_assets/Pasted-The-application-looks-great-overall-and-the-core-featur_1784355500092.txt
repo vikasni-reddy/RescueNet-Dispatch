@@ -1,0 +1,192 @@
+The application looks great overall and the core features are working well. Before considering it complete, please implement the following improvements and bug fixes.
+
+1. Fix "How it Works" Navigation
+
+The navigation bar contains a "How it works" link, but clicking it does nothing.
+
+Either:
+
+Create a proper How It Works section/page, or
+Smooth scroll to the existing section if it's already present.
+
+The section should briefly explain the workflow:
+
+User reports an emergency
+AI analyzes the report
+AI extracts structured information
+Priority score is generated
+Incident appears on the dashboard and live map
+AI recommends the nearest emergency resources
+Operator dispatches a resource
+Incident status is tracked until resolved
+2. Add Navigation Back to Home
+
+After entering the Command Center, there is no way to return to the landing page.
+
+Please add:
+
+Home button
+RescueNet AI logo clickable
+Back to Home button
+
+Users should always be able to switch between:
+
+Landing Page
+Command Center
+
+without using the browser back button.
+
+3. Fix Live Map Initial Location
+
+Currently, when opening the Live Map, it first loads somewhere around San Francisco before moving to Hyderabad.
+
+Since all demo incidents are located in Hyderabad, the map should:
+
+Load directly centered on Hyderabad
+Zoom level around 12–13
+Never flash San Francisco first
+
+Suggested center:
+
+Latitude: 17.3850
+
+Longitude: 78.4867
+
+4. Auto Focus on Active Incidents
+
+Instead of simply centering Hyderabad, automatically fit the map bounds around all active incidents so every marker is visible when the page opens.
+
+5. Incident Marker Details
+
+When clicking an incident marker, display a popup containing:
+
+Incident Summary
+Severity
+Priority Score
+People Affected
+Current Status
+Assigned Resource (if available)
+"Open Incident Details" button
+6. Resource Marker Details
+
+Clicking a resource marker should display:
+
+Resource Name
+Resource Type
+Current Status
+Availability
+Assigned Incident
+Current Coordinates
+7. Visual Route After Dispatch
+
+Once a resource is assigned, draw a route (polyline) from the selected resource to the incident.
+
+This makes the dispatch process much more visual.
+
+8. Make Dashboard Numbers Dynamic
+
+Currently the dashboard appears to use static demo values.
+
+Whenever:
+
+a new incident is reported
+an incident is resolved
+a resource is assigned
+
+automatically update:
+
+Total Incidents
+Pending Queue
+Critical Incidents
+Active Resources
+Resource Utilization
+Analytics charts
+
+without requiring a page refresh.
+
+9. Improve Incident Queue
+
+Allow clicking any incident row to open a full incident details panel.
+
+Include:
+
+AI Summary
+Original Report
+Priority
+Timeline
+Assigned Resource
+Dispatch History
+10. Add AI Reasoning
+
+For every incident display:
+
+Why the AI classified it this way.
+
+Example:
+
+Priority Score: 99
+
+Reasoning
+
+• Severe flooding detected
+
+• Multiple victims
+
+• Elderly present
+
+• Rising water levels
+
+• Immediate rescue required
+
+This greatly improves explainability.
+
+11. Better Empty States
+
+Instead of blank sections, display meaningful messages.
+
+Example:
+
+"No incidents reported."
+
+"No resources assigned."
+
+"Everything is operating normally."
+
+12. Add Loading States
+
+Show loading skeletons while:
+
+AI is analyzing
+Dashboard loads
+Map loads
+Resources load
+Analytics load
+13. Improve Mobile Responsiveness
+
+Ensure:
+
+Sidebar collapses
+Tables become scrollable
+Dashboard cards stack correctly
+Map remains usable
+14. Remove Demo Watermarks
+
+Remove any "Made with Replit" or development/demo labels if possible for the final presentation.
+
+15. Add Footer Information
+
+Add a simple footer on the landing page:
+
+RescueNet AI
+
+AI-Powered Emergency Command & Dispatch Platform
+
+Built for Idea2Impact Hackathon 2026
+
+16. Small UI Improvements
+Make the RescueNet AI logo clickable.
+Highlight the active page in the sidebar.
+Add subtle hover animations to cards.
+Smooth page transitions.
+Display the last updated timestamp on the dashboard.
+Use consistent icon sizing throughout the application.

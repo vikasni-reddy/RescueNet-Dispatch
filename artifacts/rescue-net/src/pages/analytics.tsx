@@ -24,7 +24,7 @@ const TYPE_COLORS = [
 ]
 
 export default function AnalyticsPage() {
-  const { data, isLoading } = useGetDashboardAnalytics({ query: { queryKey: ["analytics"] } })
+  const { data, isLoading } = useGetDashboardAnalytics({ query: { queryKey: ["analytics"], refetchInterval: 30_000 } })
 
   if (isLoading) {
     return (
@@ -41,7 +41,16 @@ export default function AnalyticsPage() {
     )
   }
 
-  if (!data) return null;
+  if (!data) return (
+    <Layout>
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center text-muted-foreground">
+          <p className="text-lg font-medium">No analytics data yet.</p>
+          <p className="text-sm mt-1">Report some emergencies to see trends appear here.</p>
+        </div>
+      </div>
+    </Layout>
+  );
 
   // Format data for Recharts
   const pieData = data.urgencyDistribution.map(d => ({
@@ -61,9 +70,17 @@ export default function AnalyticsPage() {
       <div className="flex-1 overflow-y-auto p-6 md:p-8">
         <div className="max-w-7xl mx-auto flex flex-col gap-6">
           
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">System Analytics</h1>
-            <p className="text-muted-foreground">Historical data and operational intelligence.</p>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-3">
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold tracking-tight">System Analytics</h1>
+              <p className="text-muted-foreground">Historical data and operational intelligence.</p>
+            </div>
+            {data.resolutionRate !== undefined && (
+              <div className="shrink-0 text-right bg-card border border-border rounded-xl px-5 py-3">
+                <div className="text-2xl font-black text-green-500">{data.resolutionRate}%</div>
+                <div className="text-xs text-muted-foreground">Resolution Rate</div>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

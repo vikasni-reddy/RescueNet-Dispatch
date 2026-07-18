@@ -14,8 +14,8 @@ export default function ResourcesPage() {
   const [search, setSearch] = useState("")
 
   const { data: resources, isLoading } = useListResources(
-    { type: typeFilter !== "all" ? typeFilter : undefined }, 
-    { query: { queryKey: ["resources", { typeFilter }] } }
+    { type: typeFilter !== "all" ? typeFilter : undefined },
+    { query: { queryKey: ["resources", { typeFilter }], refetchInterval: 30_000 } }
   )
 
   const filteredResources = resources?.filter(r => 
@@ -60,6 +60,8 @@ export default function ResourcesPage() {
                   <SelectItem value="fire">Fire</SelectItem>
                   <SelectItem value="police">Police</SelectItem>
                   <SelectItem value="boat">Boat / Marine</SelectItem>
+                  <SelectItem value="food">Food Supply</SelectItem>
+                  <SelectItem value="shelter">Shelter / Relief</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -78,13 +80,15 @@ export default function ResourcesPage() {
               ))}
             </div>
           ) : filteredResources?.length === 0 ? (
-            <div className="text-center py-20 text-muted-foreground border border-dashed rounded-lg">
-              No resources found matching the criteria.
+            <div className="text-center py-20 text-muted-foreground border border-dashed rounded-lg flex flex-col items-center gap-2">
+              <Activity className="w-10 h-10 opacity-30" />
+              <p className="font-medium">No resources found</p>
+              <p className="text-sm">Try a different type filter or search term.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {filteredResources?.map(resource => (
-                <Card key={resource.id} className="hover:border-primary/50 transition-colors flex flex-col">
+                <Card key={resource.id} className="hover:border-primary/50 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 flex flex-col">
                   <CardHeader className="p-4 pb-2">
                     <div className="flex justify-between items-start gap-2">
                       <CardTitle className="text-base line-clamp-1" title={resource.name}>{resource.name}</CardTitle>
