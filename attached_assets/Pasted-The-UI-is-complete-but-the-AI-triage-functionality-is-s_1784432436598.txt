@@ -1,0 +1,222 @@
+The UI is complete, but the AI triage functionality is still incomplete. The Incident Details page is displaying placeholder values instead of the actual AI-generated analysis. Please fix the following issues and ensure all fields are populated using the LLM response.
+
+1. People Affected Extraction
+
+The AI is not extracting the number of affected people.
+
+Example report:
+
+"A family of five is trapped..."
+
+The system currently displays:
+
+People Affected: Not reported
+
+Instead it should automatically extract:
+
+People Affected: 5
+
+The AI should identify phrases like:
+
+family of five
+12 people trapped
+around 70 residents
+two children and one elderly woman
+six passengers injured
+
+and populate the People Affected field correctly.
+
+2. AI Confidence Score
+
+The page currently displays:
+
+Confidence: N/A
+
+Instead, display the confidence score returned by the LLM (or a calculated confidence if the model does not return one).
+
+Example:
+
+Confidence: 96%
+
+This should never show "N/A" unless the AI request actually fails.
+
+3. AI Assessment
+
+The Assessment section currently displays:
+
+"AI analysis unavailable"
+
+This should instead contain a detailed AI-generated assessment.
+
+Example:
+
+AI has classified this as a high-priority flood rescue involving multiple vulnerable victims. Rising water levels, two children, and one elderly diabetic significantly increase the urgency. Immediate deployment of a rescue boat and medical team is recommended.
+
+Every incident should generate a meaningful assessment.
+
+4. Risk Factors Extraction
+
+The system currently says:
+
+"No specific risk factors extracted."
+
+The AI should automatically identify and display risk factors from the report.
+
+For this incident, the risk factors should include:
+
+Severe flooding
+Rising water levels
+Elderly person
+Two children
+Diabetes / medical vulnerability
+No food or drinking water
+People trapped on rooftop
+
+Display these as badges or bullet points.
+
+5. Incident Classification
+
+The AI currently classifies this incident as:
+
+Other
+
+This is incorrect.
+
+The AI should classify incidents into categories such as:
+
+Flood Rescue
+Fire Emergency
+Medical Emergency
+Road Accident
+Building Collapse
+Chemical Hazard
+Humanitarian Relief
+Search & Rescue
+Police Assistance
+
+This incident should be classified as:
+
+Flood Rescue
+
+6. Priority Calculation
+
+The AI assigned:
+
+Priority: 69 (Low)
+
+This is incorrect.
+
+This incident includes:
+
+Severe flooding
+Five people trapped
+Children
+Elderly
+Rising water
+Immediate rescue
+
+It should receive:
+
+Severity: Critical
+
+Priority: 90–100
+
+Ensure the priority score aligns with the extracted severity and risk factors.
+
+7. Dispatch Recommendations
+
+The dispatch recommendations currently show:
+
+"No coordinates"
+
+and
+
+"ETA N/A"
+
+Every resource in the Resource Registry already has latitude and longitude.
+
+Please:
+
+Store coordinates for every resource.
+Calculate the distance between the incident and each resource using the Haversine formula.
+Display the calculated distance.
+Estimate the ETA based on distance.
+Remove all "No coordinates" and "ETA N/A" placeholders.
+
+Example:
+
+Rescue Squad Delta
+
+Distance: 2.4 km
+
+ETA: 7 minutes
+
+Match: 96%
+
+8. AI Resource Recommendation
+
+Recommendations should be based on:
+
+Incident type
+Severity
+Distance
+Resource availability
+Resource capability
+
+For this flood incident, recommended resources should be:
+
+Rescue Boat
+Water Rescue Team
+Medical Team
+Ambulance
+
+Do not recommend unrelated resources.
+
+9. Required Resources Extraction
+
+The AI should extract and display:
+
+Required Resources:
+
+Rescue Boat
+Medical Team
+Ambulance
+
+instead of leaving this information implicit.
+
+10. AI Summary
+
+Generate a concise operator summary.
+
+Example:
+
+Five civilians, including two children and one elderly diabetic woman, are trapped on a rooftop due to severe flooding. Water levels continue to rise, creating an immediate life-threatening situation. Deploy water rescue and medical units immediately.
+
+11. AI Response Validation
+
+Ensure that every successful AI response populates:
+
+Incident Classification
+AI Assessment
+Priority Score
+Severity
+Confidence Score
+People Affected
+Risk Factors
+Required Resources
+Dispatch Recommendations
+Distance
+ETA
+
+The application should never fall back to placeholder values such as:
+
+AI analysis unavailable
+Confidence N/A
+No specific risk factors extracted
+People Affected: Not reported
+No coordinates
+ETA N/A
+
+unless the LLM request actually fails. If the LLM fails, display an appropriate error state rather than silently showing placeholder content.
+
+Goal: Ensure the Incident Details page fully reflects the AI analysis for every emergency report, with complete extraction, intelligent prioritization, and realistic dispatch recommendations instead of placeholder or missing values.

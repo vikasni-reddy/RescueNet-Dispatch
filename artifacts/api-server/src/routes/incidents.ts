@@ -247,6 +247,11 @@ router.post("/incidents/:id/assign", async (req, res): Promise<void> => {
   res.json(serializeIncident(updated));
 });
 
+// Default city-centre fallback coordinates (Hyderabad) used when an incident
+// report does not include GPS coordinates, so distance/ETA always compute.
+const DEFAULT_LAT = 17.3850;
+const DEFAULT_LNG = 78.4867;
+
 // Get resource recommendations for an incident
 router.get("/incidents/:id/recommendations", async (req, res): Promise<void> => {
   const id = parseId(req.params.id);
@@ -260,7 +265,7 @@ router.get("/incidents/:id/recommendations", async (req, res): Promise<void> => 
     .from(resourcesTable)
     .where(eq(resourcesTable.isAvailable, true));
 
-  // Parse AI-recommended resource types (may be JSON array)
+  // Parse AI-recommended resource types
   let aiRecommendedTypes: string[] = [];
   if (incident.aiRequiredResources) {
     try {
@@ -269,34 +274,14 @@ router.get("/incidents/:id/recommendations", async (req, res): Promise<void> => 
     } catch { /* ignore */ }
   }
 
-  if (!incident.lat || !incident.lng) {
-    // No coordinates — rank by type match only, no distance/ETA
-    const scored = resources
-      .map((r) => {
-        const aiMatch = aiRecommendedTypes.includes(r.type);
-        const typeScore = typeMatch(r.type, incident.needType) ? 40 : 0;
-        const aiBonus = aiMatch ? 20 : 0;
-        const totalScore = typeScore + aiBonus;
-        return {
-          resource: serializeResource(r),
-          distance: null as number | null,
-          reason: buildReason(r, null, incident.needType, aiRecommendedTypes),
-          eta: "N/A — no coordinates",
-          confidence: Math.min(95, 45 + totalScore / 2),
-          _score: totalScore,
-        };
-      })
-      .sort((a, b) => b._score - a._score)
-      .slice(0, 5)
-      .map(({ _score, ...rest }) => rest);
-
-    res.json(scored);
-    return;
-  }
+  // Use incident coordinates if available; otherwise fall back to city centre
+  const incidentLat = incident.lat ?? DEFAULT_LAT;
+  const incidentLng = incident.lng ?? DEFAULT_LNG;
+  const usingFallbackCoords = !incident.lat || !incident.lng;
 
   const scored = resources
     .map((r) => {
-      const dist = haversineKm(incident.lat!, incident.lng!, r.lat, r.lng);
+      const dist = haversineKm(incidentLat, incidentLng, r.lat, r.lng);
       const aiMatch = aiRecommendedTypes.includes(r.type);
       const typeScore = typeMatch(r.type, incident.needType) ? 40 : 0;
       const aiBonus = aiMatch ? 20 : 0;
@@ -307,7 +292,7 @@ router.get("/incidents/:id/recommendations", async (req, res): Promise<void> => 
       return {
         resource: serializeResource(r),
         distance: Math.round(dist * 10) / 10,
-        reason: buildReason(r, dist, incident.needType, aiRecommendedTypes),
+        reason: buildReason(r, dist, incident.needType, aiRecommendedTypes, usingFallbackCoords),
         eta: `${eta} minute${eta !== 1 ? "s" : ""}`,
         confidence: Math.min(98, 42 + totalScore / 2),
         _score: totalScore,
@@ -393,7 +378,8 @@ function buildReason(
   r: typeof resourcesTable.$inferSelect,
   distKm: number | null,
   needType: string | null | undefined,
-  aiRecommendedTypes: string[]
+  aiRecommendedTypes: string[],
+  approximateLocation = false
 ): string {
   const parts: string[] = [];
 
@@ -413,7 +399,8 @@ function buildReason(
 
   if (distKm !== null) {
     const eta = etaMinutes(distKm);
-    parts.push(`${distKm.toFixed(1)} km away — ETA ~${eta} min at emergency speed`);
+    const approxNote = approximateLocation ? " (estimated from city centre — no GPS on incident)" : "";
+    parts.push(`${distKm.toFixed(1)} km away — ETA ~${eta} min at emergency speed${approxNote}`);
   }
 
   if (r.capacity && r.capacity > 0) {
