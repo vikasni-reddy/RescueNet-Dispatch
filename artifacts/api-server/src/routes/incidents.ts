@@ -47,7 +47,7 @@ router.post("/incidents", async (req, res): Promise<void> => {
     return;
   }
 
-  // Insert with pending status
+  // Insert with processing status
   const [created] = await db
     .insert(incidentsTable)
     .values({
@@ -61,14 +61,14 @@ router.post("/incidents", async (req, res): Promise<void> => {
     })
     .returning();
 
-  // Add timeline entry
+  // Timeline: report received
   await db.insert(timelineTable).values({
     incidentId: created.id,
-    action: "Incident Reported",
-    details: "Emergency report received and queued for AI analysis",
+    action: "Report Received",
+    details: "Emergency report submitted by citizen and queued for AI triage",
   });
 
-  // Run AI analysis
+  // Run AI analysis (full GPT-4o-mini or heuristic fallback)
   const analysis = await analyzeIncident(rawText);
 
   const [updated] = await db
@@ -84,6 +84,8 @@ router.post("/incidents", async (req, res): Promise<void> => {
       aiConfidence: analysis.aiConfidence,
       aiExplanation: analysis.aiExplanation,
       aiReasoningFactors: JSON.stringify(analysis.reasoningFactors),
+      aiRequiredResources: JSON.stringify(analysis.requiredResources),
+      analysisMode: analysis.analysisMode,
       disasterType: analysis.disasterType,
       incidentCategory: analysis.incidentCategory,
       status: "pending",
@@ -91,11 +93,22 @@ router.post("/incidents", async (req, res): Promise<void> => {
     .where(eq(incidentsTable.id, created.id))
     .returning();
 
+  // Timeline: AI analysis
+  const modeLabel = analysis.analysisMode === "full_ai" ? "AI Analysis Complete" : "Heuristic Analysis Applied";
   await db.insert(timelineTable).values({
     incidentId: updated.id,
-    action: "AI Analysis Complete",
-    details: `Priority score: ${updated.priorityScore} | Urgency: ${updated.urgency} | Language: ${updated.originalLanguage}`,
+    action: modeLabel,
+    details: `Priority: ${updated.priorityScore}/100 | Urgency: ${updated.urgency} | Need: ${updated.needType} | Confidence: ${updated.aiConfidence}%`,
   });
+
+  // Timeline: resource recommendation (based on required resource types)
+  if (analysis.requiredResources.length > 0) {
+    await db.insert(timelineTable).values({
+      incidentId: updated.id,
+      action: "Resource Recommendation Generated",
+      details: `Recommended resource types: ${analysis.requiredResources.join(", ")}`,
+    });
+  }
 
   await db.insert(activityTable).values({
     action: `New ${updated.urgency} emergency reported`,
@@ -147,9 +160,18 @@ router.patch("/incidents/:id", async (req, res): Promise<void> => {
   if (!updated) { res.status(404).json({ error: "Not found" }); return; }
 
   if (status) {
+    const statusLabels: Record<string, string> = {
+      pending: "Awaiting Dispatch",
+      dispatched: "Resource Dispatched",
+      en_route: "Unit En Route",
+      in_progress: "Response In Progress",
+      resolved: "Incident Resolved",
+      closed: "Incident Closed",
+    };
     await db.insert(timelineTable).values({
       incidentId: id,
-      action: `Status changed to ${status}`,
+      action: statusLabels[status] ?? `Status: ${status}`,
+      details: `Status updated to "${status.replace(/_/g, " ")}"`,
     });
     broadcast("incident:updated", { id, status });
   }
@@ -179,7 +201,6 @@ router.post("/incidents/:id/assign", async (req, res): Promise<void> => {
   const [resource] = await db.select().from(resourcesTable).where(eq(resourcesTable.id, resourceId));
   if (!resource) { res.status(404).json({ error: "Resource not found" }); return; }
 
-  // Update incident
   const [updated] = await db
     .update(incidentsTable)
     .set({
@@ -191,7 +212,6 @@ router.post("/incidents/:id/assign", async (req, res): Promise<void> => {
     .where(eq(incidentsTable.id, id))
     .returning();
 
-  // Update resource
   await db
     .update(resourcesTable)
     .set({
@@ -204,13 +224,13 @@ router.post("/incidents/:id/assign", async (req, res): Promise<void> => {
   await db.insert(timelineTable).values([
     {
       incidentId: id,
-      action: `${resource.name} Assigned`,
-      details: justification ?? `Resource dispatched to incident`,
+      action: "Resource Dispatched",
+      details: `${resource.name} (${resource.type}) assigned to incident — ${justification ?? "dispatched by operator"}`,
     },
     {
       incidentId: id,
       action: `${resource.name} En Route`,
-      details: `Team is en route to the incident location`,
+      details: `Unit is traveling to the incident location`,
     },
   ]);
 
@@ -240,35 +260,56 @@ router.get("/incidents/:id/recommendations", async (req, res): Promise<void> => 
     .from(resourcesTable)
     .where(eq(resourcesTable.isAvailable, true));
 
+  // Parse AI-recommended resource types (may be JSON array)
+  let aiRecommendedTypes: string[] = [];
+  if (incident.aiRequiredResources) {
+    try {
+      const parsed = JSON.parse(incident.aiRequiredResources);
+      if (Array.isArray(parsed)) aiRecommendedTypes = parsed;
+    } catch { /* ignore */ }
+  }
+
   if (!incident.lat || !incident.lng) {
-    // No location — just rank by type match
-    const matched = resources
-      .map((r) => ({
-        resource: serializeResource(r),
-        distance: 0,
-        reason: typeMatchReason(r.type, incident.needType),
-        eta: "Unknown",
-        confidence: 60,
-      }))
-      .slice(0, 5);
-    res.json(matched);
+    // No coordinates — rank by type match only, no distance/ETA
+    const scored = resources
+      .map((r) => {
+        const aiMatch = aiRecommendedTypes.includes(r.type);
+        const typeScore = typeMatch(r.type, incident.needType) ? 40 : 0;
+        const aiBonus = aiMatch ? 20 : 0;
+        const totalScore = typeScore + aiBonus;
+        return {
+          resource: serializeResource(r),
+          distance: null as number | null,
+          reason: buildReason(r, null, incident.needType, aiRecommendedTypes),
+          eta: "N/A — no coordinates",
+          confidence: Math.min(95, 45 + totalScore / 2),
+          _score: totalScore,
+        };
+      })
+      .sort((a, b) => b._score - a._score)
+      .slice(0, 5)
+      .map(({ _score, ...rest }) => rest);
+
+    res.json(scored);
     return;
   }
 
   const scored = resources
     .map((r) => {
       const dist = haversineKm(incident.lat!, incident.lng!, r.lat, r.lng);
+      const aiMatch = aiRecommendedTypes.includes(r.type);
       const typeScore = typeMatch(r.type, incident.needType) ? 40 : 0;
+      const aiBonus = aiMatch ? 20 : 0;
       const distScore = Math.max(0, 40 - dist * 4);
       const capScore = r.capacity ? Math.min(20, r.capacity) : 10;
-      const totalScore = typeScore + distScore + capScore;
+      const totalScore = typeScore + aiBonus + distScore + capScore;
       const eta = etaMinutes(dist);
       return {
         resource: serializeResource(r),
         distance: Math.round(dist * 10) / 10,
-        reason: buildReason(r, dist, incident.needType),
+        reason: buildReason(r, dist, incident.needType, aiRecommendedTypes),
         eta: `${eta} minute${eta !== 1 ? "s" : ""}`,
-        confidence: Math.min(98, 50 + totalScore / 2),
+        confidence: Math.min(98, 42 + totalScore / 2),
         _score: totalScore,
       };
     })
@@ -322,31 +363,64 @@ function serializeResource(r: typeof resourcesTable.$inferSelect) {
   };
 }
 
-function typeMatch(resourceType: string, needType: string): boolean {
+// Maps resource types to compatible emergency need types
+function typeMatch(resourceType: string, needType: string | null | undefined): boolean {
   const map: Record<string, string[]> = {
-    medical: ["medical", "rescue"],
-    rescue: ["rescue", "medical", "boat"],
-    food: ["food"],
-    water: ["food", "rescue"],
-    shelter: ["shelter"],
-    other: [],
+    medical:  ["medical", "rescue"],
+    rescue:   ["rescue", "medical", "other"],
+    fire:     ["fire", "rescue"],
+    police:   ["police", "other"],
+    boat:     ["rescue", "flood"],
+    food:     ["food", "water", "shelter"],
+    shelter:  ["shelter", "other"],
+    water:    ["water", "food"],
   };
-  return (map[needType] ?? []).includes(resourceType);
+  return (map[resourceType] ?? []).includes(needType ?? "other");
 }
 
-function typeMatchReason(resourceType: string, needType: string): string {
-  const match = typeMatch(resourceType, needType);
-  if (match) return `Best type match for ${needType} emergency`;
-  return `Available resource — type may not be ideal for ${needType} emergency`;
-}
+const RESOURCE_DESCRIPTIONS: Record<string, string> = {
+  medical:  "Medical team with emergency care capability",
+  rescue:   "Rescue squad for extraction and evacuation",
+  fire:     "Fire suppression and hazmat unit",
+  police:   "Law enforcement and crowd control unit",
+  boat:     "Water rescue vessel for flood/drowning response",
+  food:     "Food supply and distribution unit",
+  shelter:  "Emergency shelter and temporary housing unit",
+  water:    "Clean water supply and sanitation unit",
+};
 
-function buildReason(r: typeof resourcesTable.$inferSelect, dist: number, needType: string): string {
-  const parts = [];
-  if (typeMatch(r.type, needType)) parts.push(`Best type match`);
-  parts.push(`${dist.toFixed(1)} km away`);
-  if (r.isAvailable) parts.push("currently available");
-  if (r.capacity && r.capacity > 5) parts.push(`capacity ${r.capacity}`);
-  return parts.join(", ");
+function buildReason(
+  r: typeof resourcesTable.$inferSelect,
+  distKm: number | null,
+  needType: string | null | undefined,
+  aiRecommendedTypes: string[]
+): string {
+  const parts: string[] = [];
+
+  const isAiRecommended = aiRecommendedTypes.includes(r.type);
+  const isTypeMatch = typeMatch(r.type, needType);
+
+  if (isAiRecommended) {
+    parts.push(`AI-recommended resource type for this incident`);
+  } else if (isTypeMatch) {
+    parts.push(`Compatible with ${needType ?? "this"} emergency`);
+  } else {
+    parts.push(`General-purpose resource — type may not be ideal for ${needType ?? "this"} emergency`);
+  }
+
+  const desc = RESOURCE_DESCRIPTIONS[r.type];
+  if (desc) parts.push(desc);
+
+  if (distKm !== null) {
+    const eta = etaMinutes(distKm);
+    parts.push(`${distKm.toFixed(1)} km away — ETA ~${eta} min at emergency speed`);
+  }
+
+  if (r.capacity && r.capacity > 0) {
+    parts.push(`capacity: ${r.capacity} persons`);
+  }
+
+  return parts.join(". ") + ".";
 }
 
 export default router;

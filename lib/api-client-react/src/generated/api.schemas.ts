@@ -16,7 +16,7 @@ export interface Incident {
   originalLanguage?: string | null;
   /** @nullable */
   translatedText?: string | null;
-  /** medical | rescue | food | water | shelter | other */
+  /** medical | rescue | fire | police | food | water | shelter | other */
   needType: string;
   /** critical | high | medium | low */
   urgency: string;
@@ -60,6 +60,16 @@ export interface Incident {
   disasterType?: string | null;
   /** @nullable */
   incidentCategory?: string | null;
+  /**
+     * JSON array of resource types the AI recommends (e.g. ["fire","medical"])
+     * @nullable
+     */
+  aiRequiredResources?: string | null;
+  /**
+     * full_ai | heuristic
+     * @nullable
+     */
+  analysisMode?: string | null;
   createdAt: string;
   updatedAt: string;
 }

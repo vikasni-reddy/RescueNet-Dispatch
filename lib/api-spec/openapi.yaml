@@ -384,7 +384,7 @@ components:
           type: ["string", "null"]
         needType:
           type: string
-          description: "medical | rescue | food | water | shelter | other"
+          description: "medical | rescue | fire | police | food | water | shelter | other"
         urgency:
           type: string
           description: "critical | high | medium | low"
@@ -426,6 +426,12 @@ components:
           type: ["string", "null"]
         incidentCategory:
           type: ["string", "null"]
+        aiRequiredResources:
+          type: ["string", "null"]
+          description: "JSON array of resource types the AI recommends (e.g. [\"fire\",\"medical\"])"
+        analysisMode:
+          type: ["string", "null"]
+          description: "full_ai | heuristic"
         createdAt:
           type: string
           format: date-time

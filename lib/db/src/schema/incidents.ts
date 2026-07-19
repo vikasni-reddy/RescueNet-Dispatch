@@ -34,6 +34,8 @@ export const incidentsTable = pgTable("incidents", {
   dispatchJustification: text("dispatch_justification"),
   disasterType: text("disaster_type"),
   incidentCategory: text("incident_category"),
+  aiRequiredResources: text("ai_required_resources"), // JSON array of resource type strings
+  analysisMode: text("analysis_mode"), // "full_ai" | "heuristic"
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

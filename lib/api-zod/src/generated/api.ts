@@ -33,7 +33,7 @@ export const ListIncidentsResponseItem = zod.object({
   "rawText": zod.string(),
   "originalLanguage": zod.string().nullish(),
   "translatedText": zod.string().nullish(),
-  "needType": zod.string().describe('medical | rescue | food | water | shelter | other'),
+  "needType": zod.string().describe('medical | rescue | fire | police | food | water | shelter | other'),
   "urgency": zod.string().describe('critical | high | medium | low'),
   "peopleAffected": zod.number().nullish(),
   "summary": zod.string().nullish(),
@@ -52,6 +52,8 @@ export const ListIncidentsResponseItem = zod.object({
   "dispatchJustification": zod.string().nullish(),
   "disasterType": zod.string().nullish(),
   "incidentCategory": zod.string().nullish(),
+  "aiRequiredResources": zod.string().nullish().describe('JSON array of resource types the AI recommends (e.g. [\"fire\",\"medical\"])'),
+  "analysisMode": zod.string().nullish().describe('full_ai | heuristic'),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 })
@@ -78,7 +80,7 @@ export const CreateIncidentResponse = zod.object({
   "rawText": zod.string(),
   "originalLanguage": zod.string().nullish(),
   "translatedText": zod.string().nullish(),
-  "needType": zod.string().describe('medical | rescue | food | water | shelter | other'),
+  "needType": zod.string().describe('medical | rescue | fire | police | food | water | shelter | other'),
   "urgency": zod.string().describe('critical | high | medium | low'),
   "peopleAffected": zod.number().nullish(),
   "summary": zod.string().nullish(),
@@ -97,6 +99,8 @@ export const CreateIncidentResponse = zod.object({
   "dispatchJustification": zod.string().nullish(),
   "disasterType": zod.string().nullish(),
   "incidentCategory": zod.string().nullish(),
+  "aiRequiredResources": zod.string().nullish().describe('JSON array of resource types the AI recommends (e.g. [\"fire\",\"medical\"])'),
+  "analysisMode": zod.string().nullish().describe('full_ai | heuristic'),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 })
@@ -114,7 +118,7 @@ export const GetIncidentResponse = zod.object({
   "rawText": zod.string(),
   "originalLanguage": zod.string().nullish(),
   "translatedText": zod.string().nullish(),
-  "needType": zod.string().describe('medical | rescue | food | water | shelter | other'),
+  "needType": zod.string().describe('medical | rescue | fire | police | food | water | shelter | other'),
   "urgency": zod.string().describe('critical | high | medium | low'),
   "peopleAffected": zod.number().nullish(),
   "summary": zod.string().nullish(),
@@ -133,6 +137,8 @@ export const GetIncidentResponse = zod.object({
   "dispatchJustification": zod.string().nullish(),
   "disasterType": zod.string().nullish(),
   "incidentCategory": zod.string().nullish(),
+  "aiRequiredResources": zod.string().nullish().describe('JSON array of resource types the AI recommends (e.g. [\"fire\",\"medical\"])'),
+  "analysisMode": zod.string().nullish().describe('full_ai | heuristic'),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 })
@@ -158,7 +164,7 @@ export const UpdateIncidentResponse = zod.object({
   "rawText": zod.string(),
   "originalLanguage": zod.string().nullish(),
   "translatedText": zod.string().nullish(),
-  "needType": zod.string().describe('medical | rescue | food | water | shelter | other'),
+  "needType": zod.string().describe('medical | rescue | fire | police | food | water | shelter | other'),
   "urgency": zod.string().describe('critical | high | medium | low'),
   "peopleAffected": zod.number().nullish(),
   "summary": zod.string().nullish(),
@@ -177,6 +183,8 @@ export const UpdateIncidentResponse = zod.object({
   "dispatchJustification": zod.string().nullish(),
   "disasterType": zod.string().nullish(),
   "incidentCategory": zod.string().nullish(),
+  "aiRequiredResources": zod.string().nullish().describe('JSON array of resource types the AI recommends (e.g. [\"fire\",\"medical\"])'),
+  "analysisMode": zod.string().nullish().describe('full_ai | heuristic'),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 })
@@ -209,7 +217,7 @@ export const AssignResourceResponse = zod.object({
   "rawText": zod.string(),
   "originalLanguage": zod.string().nullish(),
   "translatedText": zod.string().nullish(),
-  "needType": zod.string().describe('medical | rescue | food | water | shelter | other'),
+  "needType": zod.string().describe('medical | rescue | fire | police | food | water | shelter | other'),
   "urgency": zod.string().describe('critical | high | medium | low'),
   "peopleAffected": zod.number().nullish(),
   "summary": zod.string().nullish(),
@@ -228,6 +236,8 @@ export const AssignResourceResponse = zod.object({
   "dispatchJustification": zod.string().nullish(),
   "disasterType": zod.string().nullish(),
   "incidentCategory": zod.string().nullish(),
+  "aiRequiredResources": zod.string().nullish().describe('JSON array of resource types the AI recommends (e.g. [\"fire\",\"medical\"])'),
+  "analysisMode": zod.string().nullish().describe('full_ai | heuristic'),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 })
