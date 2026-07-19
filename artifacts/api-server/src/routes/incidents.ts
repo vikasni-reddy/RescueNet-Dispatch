@@ -8,6 +8,7 @@ import {
   activityTable,
 } from "@workspace/db";
 import { analyzeIncident, haversineKm, etaMinutes } from "../lib/ai";
+import { broadcast } from "../lib/broadcaster";
 
 const router: IRouter = Router();
 
@@ -103,6 +104,14 @@ router.post("/incidents", async (req, res): Promise<void> => {
     urgency: updated.urgency,
   });
 
+  // Broadcast to all connected operator dashboards immediately
+  broadcast("incident:new", {
+    id: updated.id,
+    urgency: updated.urgency,
+    priorityScore: updated.priorityScore,
+    summary: updated.summary,
+  });
+
   res.status(201).json(serializeIncident(updated));
 });
 
@@ -142,6 +151,7 @@ router.patch("/incidents/:id", async (req, res): Promise<void> => {
       incidentId: id,
       action: `Status changed to ${status}`,
     });
+    broadcast("incident:updated", { id, status });
   }
 
   res.json(serializeIncident(updated));
@@ -211,6 +221,8 @@ router.post("/incidents/:id/assign", async (req, res): Promise<void> => {
     incidentSummary: incident.summary,
     urgency: incident.urgency,
   });
+
+  broadcast("incident:dispatched", { id, resourceName: resource.name });
 
   res.json(serializeIncident(updated));
 });

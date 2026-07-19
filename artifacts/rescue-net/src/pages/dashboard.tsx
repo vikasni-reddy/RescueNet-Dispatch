@@ -8,7 +8,7 @@ import { Link } from "wouter"
 import { formatDistanceToNow, format } from "date-fns"
 import { useState, useEffect } from "react"
 
-const REFETCH_MS = 30_000
+const REFETCH_MS = 5_000
 
 export default function Dashboard() {
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date())

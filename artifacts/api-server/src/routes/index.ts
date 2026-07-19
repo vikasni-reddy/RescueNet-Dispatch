@@ -4,10 +4,12 @@ import incidentsRouter from "./incidents";
 import resourcesRouter from "./resources";
 import dashboardRouter from "./dashboard";
 import activityRouter from "./activity";
+import eventsRouter from "./events";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
+router.use(eventsRouter);
 router.use(incidentsRouter);
 router.use(resourcesRouter);
 router.use(dashboardRouter);

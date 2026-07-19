@@ -1,6 +1,7 @@
 import { Link, useLocation } from "wouter"
 import { useState } from "react"
-import { Activity, LayoutDashboard, Map, List, FileBarChart, Siren, Home, Menu, X } from "lucide-react"
+import { Activity, LayoutDashboard, Map, List, FileBarChart, Siren, Home, Menu, X, Search } from "lucide-react"
+import { useRealtime } from "@/hooks/use-realtime"
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -12,6 +13,18 @@ const navItems = [
 
 function SidebarContent({ onClose }: { onClose?: () => void }) {
   const [location] = useLocation()
+  const [searchVal, setSearchVal] = useState("")
+
+  function handleSearch(e: React.FormEvent) {
+    e.preventDefault()
+    const raw = searchVal.trim().toUpperCase().replace(/^INC-0*/, "")
+    const id = parseInt(raw, 10)
+    if (!isNaN(id) && id > 0) {
+      window.location.href = `/incidents/${id}`
+      onClose?.()
+      setSearchVal("")
+    }
+  }
 
   return (
     <div className="h-full flex flex-col">
@@ -28,8 +41,22 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
         )}
       </div>
 
+      {/* Quick incident search */}
+      <div className="px-4 py-3 border-b border-border/50">
+        <form onSubmit={handleSearch} className="relative">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+          <input
+            type="text"
+            value={searchVal}
+            onChange={e => setSearchVal(e.target.value)}
+            placeholder="Jump to INC-0052…"
+            className="w-full pl-8 pr-3 py-1.5 text-xs rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+          />
+        </form>
+      </div>
+
       {/* Nav */}
-      <div className="flex-1 py-6 px-4 flex flex-col gap-1 overflow-y-auto">
+      <div className="flex-1 py-4 px-4 flex flex-col gap-1 overflow-y-auto">
         <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-2">Command Center</div>
         {navItems.map((item) => {
           const isActive = location === item.href || location.startsWith(`${item.href}/`)
@@ -84,6 +111,7 @@ export function Sidebar() {
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false)
+  useRealtime()
 
   return (
     <div className="flex h-screen w-full bg-background overflow-hidden selection:bg-primary/30">

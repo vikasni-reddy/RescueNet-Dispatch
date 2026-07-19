@@ -11,18 +11,37 @@ import { Search, Plus } from "lucide-react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 
+function formatId(id: number) {
+  return `INC-${String(id).padStart(4, "0")}`
+}
+
 export default function IncidentsPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [urgencyFilter, setUrgencyFilter] = useState<string>("all")
-  
+  const [search, setSearch] = useState("")
+
   const { data: incidents, isLoading } = useListIncidents(
-    { 
+    {
       status: statusFilter !== "all" ? statusFilter : undefined,
       urgency: urgencyFilter !== "all" ? urgencyFilter : undefined,
       sortBy: "priorityScore"
-    }, 
-    { query: { queryKey: ["incidents", { statusFilter, urgencyFilter }] } }
+    },
+    { query: { queryKey: ["incidents", { statusFilter, urgencyFilter }], refetchInterval: 5_000 } }
   )
+
+  // Client-side filter: match by INC-XXXX, bare numeric id, summary text, or address
+  const filtered = incidents?.filter(inc => {
+    if (!search.trim()) return true
+    const q = search.trim().toLowerCase()
+    // INC-XXXX or bare number
+    const numMatch = q.replace(/^inc-0*/, "")
+    if (!isNaN(Number(numMatch)) && numMatch !== "" && String(inc.id) === numMatch) return true
+    // text match on summary / rawText / address
+    if (inc.summary?.toLowerCase().includes(q)) return true
+    if (inc.rawText.toLowerCase().includes(q)) return true
+    if (inc.address?.toLowerCase().includes(q)) return true
+    return false
+  })
 
   return (
     <Layout>
@@ -44,7 +63,12 @@ export default function IncidentsPage() {
           <div className="flex flex-col sm:flex-row gap-4 items-center bg-card p-4 rounded-lg border border-border shadow-sm">
             <div className="relative flex-1 w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search incidents..." className="pl-9 bg-background" />
+              <Input
+                placeholder="Search by INC-0052, keyword, or address…"
+                className="pl-9 bg-background"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+              />
             </div>
             
             <div className="flex items-center gap-4 w-full sm:w-auto">
@@ -101,24 +125,27 @@ export default function IncidentsPage() {
                       <TableCell><Skeleton className="h-6 w-20" /></TableCell>
                     </TableRow>
                   ))
-                ) : incidents?.length === 0 ? (
+                ) : filtered?.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
-                      No incidents found matching criteria.
+                      {search ? `No incidents match "${search}"` : "No incidents found matching criteria."}
                     </TableCell>
                   </TableRow>
                 ) : (
-                  incidents?.map((incident) => (
+                  filtered?.map((incident) => (
                     <TableRow key={incident.id} className="cursor-pointer hover:bg-muted/50" onClick={() => window.location.href = `/incidents/${incident.id}`}>
                       <TableCell className="font-mono text-center">
-                        <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full font-bold text-xs ${
-                          incident.priorityScore >= 90 ? 'bg-critical text-white' :
-                          incident.priorityScore >= 70 ? 'bg-high text-white' :
-                          incident.priorityScore >= 40 ? 'bg-medium text-white' :
-                          'bg-low text-white'
-                        }`}>
-                          {incident.priorityScore}
-                        </span>
+                        <div className="flex flex-col items-center gap-0.5">
+                          <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full font-bold text-xs ${
+                            incident.priorityScore >= 90 ? 'bg-critical text-white' :
+                            incident.priorityScore >= 70 ? 'bg-high text-white' :
+                            incident.priorityScore >= 40 ? 'bg-medium text-white' :
+                            'bg-low text-white'
+                          }`}>
+                            {incident.priorityScore}
+                          </span>
+                          <span className="text-[9px] text-muted-foreground">{formatId(incident.id)}</span>
+                        </div>
                       </TableCell>
                       <TableCell>
                         <Badge variant={incident.urgency as any} className="uppercase text-[10px]">{incident.urgency}</Badge>
